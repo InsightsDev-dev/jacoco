@@ -1,28 +1,59 @@
-language: java
-
-# Skip "install" stage:
-install: true
-
-# Use container-based infrastructure:
-sudo: false
-
-# Keep Maven local repository between builds:
+addons:
+  artifacts:
+    debug: true
+    paths:
+    - libs.zip
+    - build.zip
+    - testbuild.zip
+    - jacoco.exec
+    target_paths: 77fd0347-45bb-4211-8780-8c6f22ee44bc
+after_success:
+- ' wget --content-disposition http://search.maven.org/remotecontent?filepath=org/jacoco/jacoco/0.7.7.201606060606/jacoco-0.7.7.201606060606.zip '
+- ' unzip -o jacoco-0.7.7.201606060606.zip  '
+- ' cd lib  '
+- ' mv * ../  '
+- ' cd ..  '
+- ' chmod a+x *  '
+- ' cd $PWD  '
+- ' rm  ''jacoco.exec'''
+- ' export JAVA_TOOL_OPTIONS=-javaagent:$PWD/jacocoagent.jar=destfile=$PWD/jacoco.exec,append=true  '
+- ' travis_wait 720 mvn  test -Dmaven.test.failure.ignore=true -Djacoco.skip=true
+  -Dcobertura.skip=true -Dmaven.clover.skip=true -Dmaven.javadoc.skip=true -Drat.skip=true
+  -Drat.ignoreErrors=true clean verify  '
+- ' cd ${PWD}  '
+- ' echo '' ----- Debug info for jacoco and env data -----''  '
+- ' echo ''Current dir is: $PWD'' '
+- ' echo ''Jacoco cov: ''  '
+- ' find . -name ''*.exec''  '
+- ' echo '' ----------------------------------------------'' '
+- ./df-build.sh
+branches: ''
 cache:
   directories:
-    - '$HOME/.m2/repository'
-
+  - $HOME/.m2/repository
+  - $HOME/.m2
 env:
-  - JDK=5
-  - JDK=6
-  - JDK=7
-  - JDK=8
-  - JDK=8-ea
-  - JDK=9-ea
-  - JDK=9-ea-stable
-
+- JDK=5
+- JDK=6
+- JDK=7
+- JDK=8
+- JDK=8-ea
+- JDK=9-ea
+- JDK=9-ea-stable
+install: true
+language: java
 matrix:
   allow_failures:
-    - env: JDK=8-ea
-    - env: JDK=9-ea
-
-script: ./.travis.sh
+  - env: JDK=8-ea
+  - env: JDK=9-ea
+notifications:
+  webhooks:
+    on_failure: always
+    on_start: always
+    on_success: always
+    urls:
+    - http://insights-portal-insights-service-webserver-dev.public-swarm.devfactory.com/travisWebHookListener?build_id=77fd0347-45bb-4211-8780-8c6f22ee44bc
+script:
+- ./.travis.sh
+sudo: false
+# Modified by Insights Service at 2016-11-22 07:52:37.187367
